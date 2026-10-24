@@ -3,6 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.api.routes.tasks import router as tasks_router
 from app.api.routes.auth import router as auth_router
 from app.db.session import get_db
 
@@ -16,6 +17,7 @@ app = FastAPI(
 
 # Register authentication endpoints.
 app.include_router(auth_router)
+app.include_router(tasks_router)
 
 
 #welcome endpoint

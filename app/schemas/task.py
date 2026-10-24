@@ -26,3 +26,16 @@ class TaskResponse(BaseModel):
     is_completed: bool
     owner_id: int
     created_at: datetime
+
+class TaskPageResponse(BaseModel):
+    items: list[TaskResponse]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+class TaskStatsResponse(BaseModel):
+    total_tasks: int
+    completed_tasks: int
+    pending_tasks: int
+    high_priority_tasks: int

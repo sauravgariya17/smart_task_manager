@@ -1,13 +1,14 @@
-from fastapi import APIRouter , Depends, HTTPException , Response,status
-from sqlalchemy import select
+from fastapi import APIRouter , Depends, HTTPException , Response,status, Query
+from sqlalchemy import select, func, case
 from sqlalchemy.exc import SQLAlchemyError
 from  sqlalchemy.orm import Session
+from typing import Literal
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.task import Task
 from app.models.user import User
-from app.schemas.task import TaskCreate,TaskResponse,TaskUpdate
+from app.schemas.task import TaskCreate,TaskResponse,TaskUpdate, TaskPageResponse,TaskStatsResponse
 
 router = APIRouter(
     prefix="/tasks",
@@ -47,19 +48,123 @@ def create_task(
     return new_task
 
 
-@router.get("", response_model=list[TaskResponse])
+@router.get("", response_model=TaskPageResponse)
 def list_tasks(
+    is_completed: bool | None = None,
+    priority: Literal["low","medium","high"] | None = None,
+    search: str | None = Query(
+        default=None,
+        min_length=1,
+        max_length=100,
+    ),
+    sort_by: Literal["created_at", "title","priority"] = "created_at",
+    order: Literal["asc","desc"] = "desc",
+    limit: int = Query(default=10,ge=1,le=100),
+    offset: int = Query(default=0,ge=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
 
+    # Apply ownership and optional filters.
+    conditions = [Task.owner_id == current_user.id]
+
+    if is_completed is not None:
+        conditions.append(Task.is_completed == is_completed)
+
+    if priority is not None:
+        conditions.append(Task.priority == priority)
+
+    if search is not None:
+        conditions.append(Task.title.ilike(f"%{search}%"))
+
+    # Count all matching tasks, not just the current page
+    count_statement = (
+        select(func.count(Task.id))
+        .select_from(Task)
+        .where(*conditions)
+    )
+    total = db.scalar(count_statement) or 0
+
+    # Select a permitted sorting column.
+    sort_column = {
+        "created_at" : Task.created_at,
+        "title" : Task.title,
+        "priority": Task.priority
+    }
+    sort_column = sort_column[sort_by]
+
+    # Apply ascending or descending order
+    if order == "asc":
+        ordering = (sort_column.asc(), Task.id.asc())
+    else:
+        ordering = (sort_column.desc(),Task.id.desc())
+
+    # Fetch only the requested page.
     statement = (
         select(Task)
-        .where(Task.owner_id == current_user.id)
-        .order_by(Task.created_at.desc(), Task.id.desc())
+        .where(*conditions)
+        .order_by(*ordering)
+        .offset(offset)
+        .limit(limit)
     )
 
-    return list(db.scalars(statement).all())
+    items = list(db.scalars(statement).all())
+
+    return TaskPageResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=(offset+len(items)) < total,
+    )
+
+@router.get("/stats",response_model=TaskStatsResponse)
+def get_task_stats(
+    db:Session = Depends(get_db),
+    current_user : User = Depends(get_current_user)
+):
+
+    statement = select(
+        func.count(Task.id),
+        func.coalesce(
+            func.sum(
+                case(
+                    (Task.is_completed.is_(True),1),
+                    else_=0,
+                )
+            ),
+            0,
+        ),
+        func.coalesce(
+            func.sum(
+                case(
+                    (Task.is_completed.is_(False),1),
+                    else_=0,
+                )
+            ),
+            0,
+        ),
+        func.coalesce(
+            func.sum(
+                case(
+                    (Task.priority == "high", 1),
+                    else_=0,
+                )
+            ),
+            0,
+        ),
+    ).where(Task.owner_id == current_user.id)
+
+    row = db.execute(statement).one()
+
+    return TaskStatsResponse(
+        total_tasks=int(row[0]),
+        completed_tasks=int(row[1]),
+        pending_tasks=int(row[2]),
+        high_priority_tasks=int(row[3]),
+    )
+
+
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)

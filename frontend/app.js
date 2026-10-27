@@ -59,6 +59,27 @@ async function apiRequest(path, options = {}) {
     return data;
 }
 
+function showToast(message, type = "success") {
+    const container = $("toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+
+    const title = document.createElement("div");
+    title.className = "toast-title";
+    title.textContent = type === "error" ? "Something went wrong" : "Success";
+
+    const text = document.createElement("div");
+    text.className = "toast-message";
+    text.textContent = message;
+
+    toast.append(title, text);
+    container.append(toast);
+
+    // Remove the notification after 4 seconds.
+    setTimeout(() => toast.remove(), 4000);
+}
 function setAuthMode(mode) {
     authMode = mode;
     const registering = mode === "register";
@@ -275,7 +296,7 @@ function renderTask(task) {
                 method: "DELETE",
             });
 
-            showMessage("task-message", "Task deleted.", true);
+            showToast("Task deleted successfully.");
             await refreshDashboard();
         } catch (error) {
             showMessage("task-message", error.message);
@@ -294,7 +315,7 @@ async function updateTask(id, updates) {
             body: JSON.stringify(updates),
         });
 
-        showMessage("task-message", "Task updated.", true);
+        showToast("Task updated successfully.");
         await refreshDashboard();
     } catch (error) {
         showMessage("task-message", error.message);

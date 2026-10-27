@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Smart Task Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="#">
+            <span class="brand-icon">✓</span>
+            TaskFlow
+        </a>
+        <span id="connection-status" class="status">Connecting...</span>
+    </header>
+
+    <main class="container">
+        <section id="auth-section" class="auth-layout">
+            <div class="intro-panel">
+                <p class="eyebrow">YOUR PERSONAL WORKSPACE</p>
+                <h1>Make every task<br>count.</h1>
+                <p class="intro-text">
+                    Organize your work, track your progress, and build
+                    better habits one task at a time.
+                </p>
+                <div class="feature-list">
+                    <p>✓ &nbsp; Keep your tasks organized</p>
+                    <p>✓ &nbsp; Track priorities and progress</p>
+                    <p>✓ &nbsp; Focus on what matters</p>
+                </div>
+            </div>
+
+            <div class="auth-card">
+                <div class="auth-tabs">
+                    <button id="login-tab" class="tab active" type="button">
+                        Log in
+                    </button>
+                    <button id="register-tab" class="tab" type="button">
+                        Create account
+                    </button>
+                </div>
+
+                <h2 id="auth-title">Welcome back</h2>
+                <p id="auth-subtitle" class="muted">
+                    Enter your details to continue.
+                </p>
+
+                <form id="auth-form">
+                    <div id="name-group" class="field hidden">
+                        <label for="name">Full name</label>
+                        <input id="name" type="text" minlength="2"
+                               maxlength="100" autocomplete="name">
+                    </div>
+
+                    <div class="field">
+                        <label for="email">Email address</label>
+                        <input id="email" type="email" required
+                               autocomplete="email"
+                               placeholder="you@example.com">
+                    </div>
+
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input id="password" type="password" required
+                               minlength="8" maxlength="128"
+                               autocomplete="current-password"
+                               placeholder="At least 8 characters">
+                    </div>
+
+                    <button id="auth-submit" class="btn primary full"
+                            type="submit">Log in</button>
+                </form>
+
+                <p id="auth-message" class="message" role="status"></p>
+                <p class="small-note">
+                    Your account and tasks are managed by your backend API.
+                </p>
+            </div>
+        </section>
+
+        <section id="dashboard-section" class="hidden">
+            <div class="dashboard-heading">
+                <div>
+                    <p class="eyebrow">YOUR WORKSPACE</p>
+                    <h1>Task dashboard</h1>
+                    <p class="muted">Small steps lead to big results.</p>
+                </div>
+                <button id="logout-btn" class="btn secondary" type="button">
+                    Log out
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <article class="stat-card">
+                    <p>Total tasks</p>
+                    <strong id="total-stat">0</strong>
+                </article>
+                <article class="stat-card">
+                    <p>Completed</p>
+                    <strong id="completed-stat">0</strong>
+                </article>
+                <article class="stat-card">
+                    <p>Pending</p>
+                    <strong id="pending-stat">0</strong>
+                </article>
+                <article class="stat-card">
+                    <p>High priority</p>
+                    <strong id="high-stat">0</strong>
+                </article>
+            </div>
+
+            <div class="dashboard-grid">
+                <section class="panel">
+                    <h2 id="task-form-title">Create a task</h2>
+
+                    <form id="task-form">
+                        <div class="field">
+                            <label for="task-title">Task title</label>
+                            <input id="task-title" type="text" required
+                                   maxlength="200"
+                                   placeholder="e.g. Practice DSA">
+                        </div>
+
+                        <div class="field">
+                            <label for="task-description">Description</label>
+                            <textarea id="task-description" rows="3"
+                                      placeholder="Add some details (optional)"></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label for="task-priority">Priority</label>
+                            <select id="task-priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+
+                        <div class="button-row">
+                            <button id="save-task-btn" class="btn primary"
+                                    type="submit">Add task</button>
+                            <button id="cancel-edit-btn" class="btn secondary hidden"
+                                    type="button">Cancel</button>
+                        </div>
+                    </form>
+
+                    <p id="task-message" class="message" role="status"></p>
+                </section>
+
+                <section class="panel">
+                    <div class="list-heading">
+                        <div>
+                            <h2>Your tasks</h2>
+                            <p class="muted">Manage your daily priorities.</p>
+                        </div>
+                        <button id="refresh-btn" class="btn secondary"
+                                type="button">Refresh</button>
+                    </div>
+
+                    <div class="filters">
+                        <input id="search-input" type="search"
+                               placeholder="Search task titles...">
+
+                        <select id="status-filter" aria-label="Filter by status">
+                            <option value="">All statuses</option>
+                            <option value="false">Pending</option>
+                            <option value="true">Completed</option>
+                        </select>
+
+                        <select id="priority-filter" aria-label="Filter by priority">
+                            <option value="">All priorities</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+
+                        <select id="sort-filter" aria-label="Sort tasks">
+                            <option value="created_at:desc">Newest first</option>
+                            <option value="created_at:asc">Oldest first</option>
+                            <option value="title:asc">Title A–Z</option>
+                            <option value="priority:desc">Priority Z–A</option>
+                        </select>
+                    </div>
+
+                    <p id="list-message" class="muted" role="status"></p>
+                    <div id="task-list" class="task-list"></div>
+
+                    <div class="pagination">
+                        <button id="prev-btn" class="btn secondary"
+                                type="button">Previous</button>
+                        <span id="page-info">Page 1</span>
+                        <button id="next-btn" class="btn secondary"
+                                type="button">Next</button>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <footer>TaskFlow · Built with HTML, CSS, JavaScript and FastAPI</footer>
+    <script src="app.js"></script>
+</body>
+</html>
